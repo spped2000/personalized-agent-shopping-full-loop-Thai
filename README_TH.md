@@ -81,7 +81,45 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
 ```
 
-### 3. ตั้งค่า Environment Variables
+### 3. ดาวน์โหลดข้อมูลสินค้า
+
+ดาวน์โหลดไฟล์ JSON ที่จำเป็นสำหรับ web environment (1,000 สินค้า):
+
+```bash
+cd personalized_shopping/shared_libraries/data
+
+# ดาวน์โหลด items_shuffle_1000.json (4.5MB)
+uv run python -m gdown https://drive.google.com/uc?id=1EgHdxQ_YxqIQlvvq5iKlCrkEKR6-j0Ib
+
+# ดาวน์โหลด items_ins_v2_1000.json (147KB)
+uv run python -m gdown https://drive.google.com/uc?id=1IduG0xl544V_A_jv3tHXC0kyFi7PnyBu
+
+cd ../../..
+```
+
+**หมายเหตุ:** ถ้าต้องการข้อมูลเพิ่มเติม (10,000 หรือ 50,000 สินค้า) สามารถดาวน์โหลดได้:
+
+<details>
+<summary>คลิกเพื่อดูคำสั่งดาวน์โหลดไฟล์ขนาดใหญ่ (ไม่แนะนำ)</summary>
+
+```bash
+cd personalized_shopping/shared_libraries/data
+
+# items_shuffle.json (5.1GB - ทั้งหมด 50,000 สินค้า)
+uv run python -m gdown https://drive.google.com/uc?id=1A2whVgOO0euk5O13n2iYDM0bQRkkRduB
+
+# items_ins_v2.json (178MB - attributes สำหรับทั้งหมด)
+uv run python -m gdown https://drive.google.com/uc?id=1s2j6NgHljiZzQNL3veZaAiyW98QLDlKR5O
+
+# items_human_ins.json (4.9MB)
+uv run python -m gdown https://drive.google.com/uc?id=14Kb5SPBk_jfdLZ_CDBNitW98QLDlKR5O
+
+cd ../../..
+```
+
+</details>
+
+### 4. ตั้งค่า Environment Variables
 
 สร้างไฟล์ `.env`:
 
@@ -89,18 +127,37 @@ uv sync
 GOOGLE_GENAI_API_KEY=your_api_key_here
 ```
 
-### 4. สร้าง Search Index
+### 5. เตรียมข้อมูลสำหรับ Search Engine
+
+สร้าง document format และ index:
 
 **Windows:**
 ```powershell
 cd personalized_shopping\shared_libraries\search_engine
+
+# สร้างโฟลเดอร์สำหรับเก็บ resources
+mkdir resources_100, resources_1k -Force
+
+# แปลงข้อมูล JSON เป็น format ที่ search engine ใช้ได้
+uv run python convert_product_file_format.py
+
+# สร้าง search index (ใช้เวลาประมาณ 2-3 วินาที)
 uv run python -m pyserini.index.lucene --collection JsonCollection --input resources_1k --index indexes_1k --generator DefaultLuceneDocumentGenerator --threads 1 --storePositions --storeDocvectors --storeRaw
+
 cd ..\..\..
 ```
 
 **macOS/Linux:**
 ```bash
 cd personalized_shopping/shared_libraries/search_engine
+
+# สร้างโฟลเดอร์สำหรับเก็บ resources
+mkdir -p resources_100 resources_1k
+
+# แปลงข้อมูล JSON เป็น format ที่ search engine ใช้ได้
+uv run python convert_product_file_format.py
+
+# สร้าง search index (ใช้เวลาประมาณ 2-3 วินาที)
 uv run python -m pyserini.index.lucene \
   --collection JsonCollection \
   --input resources_1k \
@@ -108,10 +165,11 @@ uv run python -m pyserini.index.lucene \
   --generator DefaultLuceneDocumentGenerator \
   --threads 1 \
   --storePositions --storeDocvectors --storeRaw
+
 cd ../../..
 ```
 
-### 5. รัน Agent
+### 6. รัน Agent
 
 ```bash
 uv run adk web
