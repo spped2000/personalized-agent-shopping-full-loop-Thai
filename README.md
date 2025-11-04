@@ -305,18 +305,3 @@ num_product_items = 1000  # เปลี่ยนเป็น 10000 หรือ
 - ต้องมี Java JDK สำหรับ Pyserini
 - NumPy version ต้อง < 2.0 (locked ใน pyproject.toml)
 
-## 📄 License
-
-Apache License 2.0
-
-## 🤝 Contributing
-
-Pull requests are welcome!
-
-## 📞 Support
-
-หากพบปัญหาหรือมีคำถาม กรุณาเปิด issue ใน GitHub repository
-
----
-
-**Developed with ❤️ for Thai customers**
