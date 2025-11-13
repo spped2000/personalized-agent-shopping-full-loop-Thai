@@ -40,6 +40,10 @@ env/
 # Logs
 *.log
 
+# Test results
+eval/test_results/
+tests/test_results/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -47,15 +51,16 @@ Thumbs.db
 # Project specific
 *.ipynb_checkpoints/
 
-# Search engine indexes (large files)
-personalized_shopping/shared_libraries/search_engine/indexes_*/
-personalized_shopping/shared_libraries/search_engine/resources_*/
+# Search engine indexes (generated files)
+personalized_shopping/shared_libraries/search_engine/indexes_100/
+personalized_shopping/shared_libraries/search_engine/indexes_1k/
 
-# Keep only the small indexes
-!personalized_shopping/shared_libraries/search_engine/indexes_100/
-!personalized_shopping/shared_libraries/search_engine/indexes_1k/
-!personalized_shopping/shared_libraries/search_engine/resources_100/
-!personalized_shopping/shared_libraries/search_engine/resources_1k/
+# ADK generated files
+personalized_shopping/.adk/
+*.evalset.json
+
+# Claude Code
+.claude/
 
 # Large data files (>100MB - GitHub limit)
 personalized_shopping/shared_libraries/data/items_shuffle.json

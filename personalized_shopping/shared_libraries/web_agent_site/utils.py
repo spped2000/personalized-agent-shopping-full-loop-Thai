@@ -15,21 +15,50 @@
 import bisect
 import hashlib
 import logging
+import os
 from os.path import abspath, dirname, join
+from pathlib import Path
 import random
 
 BASE_DIR = dirname(abspath(__file__))
 DEBUG_PROD_SIZE = None  # set to `None` to disable
 
-DEFAULT_ATTR_PATH = join(BASE_DIR, "../data/items_ins_v2.json")
-DEFAULT_FILE_PATH = join(BASE_DIR, "../data/items_shuffle.json")
+# Auto-detect available data files (support both full and 1k/10k variants)
+data_dir = Path(BASE_DIR) / "../data"
+
+# Find items_ins_v2 file (try 1k first, then full)
+_attr_candidates = [
+    data_dir / "items_ins_v2_1000.json",
+    data_dir / "items_ins_v2.json",
+    data_dir / "items_ins_v2_10000.json",
+]
+DEFAULT_ATTR_PATH = None
+for candidate in _attr_candidates:
+    if candidate.exists():
+        DEFAULT_ATTR_PATH = str(candidate)
+        break
+if DEFAULT_ATTR_PATH is None:
+    DEFAULT_ATTR_PATH = join(BASE_DIR, "../data/items_ins_v2.json")  # fallback
+
+# Find items_shuffle file (try 1k first, then full)
+_shuffle_candidates = [
+    data_dir / "items_shuffle_1000.json",
+    data_dir / "items_shuffle.json",
+    data_dir / "items_shuffle_10000.json",
+]
+DEFAULT_FILE_PATH = None
+for candidate in _shuffle_candidates:
+    if candidate.exists():
+        DEFAULT_FILE_PATH = str(candidate)
+        break
+if DEFAULT_FILE_PATH is None:
+    DEFAULT_FILE_PATH = join(BASE_DIR, "../data/items_shuffle.json")  # fallback
 
 DEFAULT_REVIEW_PATH = join(BASE_DIR, "../data/reviews.json")
 
 FEAT_CONV = join(BASE_DIR, "../data/feat_conv.pt")
 FEAT_IDS = join(BASE_DIR, "../data/feat_ids.pt")
 
-HUMAN_ATTR_PATH = join(BASE_DIR, "../data/items_human_ins.json")
 HUMAN_ATTR_PATH = join(BASE_DIR, "../data/items_human_ins.json")
 
 

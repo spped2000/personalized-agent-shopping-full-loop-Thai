@@ -262,10 +262,12 @@ def load_products(filepath, num_products=None, human_goals=True):
     if human_goals:
         with open(HUMAN_ATTR_PATH) as f:
             human_attributes = json.load(f)
+    else:
+        human_attributes = {}
+
     with open(DEFAULT_ATTR_PATH) as f:
         attributes = json.load(f)
-    with open(HUMAN_ATTR_PATH) as f:
-        human_attributes = json.load(f)
+
     print("Attributes loaded.")
 
     asins = set()

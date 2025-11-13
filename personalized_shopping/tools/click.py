@@ -26,8 +26,10 @@ async def click(button_name: str, tool_context: ToolContext) -> str:
       tool_context(ToolContext): The function context.
 
     Returns:
-      str: The webpage after clicking the button.
+      str: The webpage after clicking the button with enhanced product details including images and ASIN.
     """
+    from bs4 import BeautifulSoup
+
     webshop_env = get_webshop_env()
     status = {"reward": None, "done": False}
     action_string = f"click[{button_name}]"
@@ -37,6 +39,64 @@ async def click(button_name: str, tool_context: ToolContext) -> str:
     index = ob.find("Back to Search")
     if index >= 0:
         ob = ob[index:]
+
+    # Extract product details from HTML if on product page
+    html = webshop_env.state["html"]
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Check if we're on a product page (item_page)
+    product_image = soup.find(id="product-image")
+    if product_image:
+        # Extract product information from the product page
+        image_url = product_image.get("src")
+
+        # Extract ASIN from URL or page
+        current_url = webshop_env.state["url"]
+        asin = None
+        if "/item_page/" in current_url:
+            url_parts = current_url.split("/")
+            if len(url_parts) > 4:
+                asin = url_parts[4]
+
+        # Extract title
+        title_elem = soup.find("h2")
+        title = title_elem.get_text().strip() if title_elem else "N/A"
+
+        # Extract price
+        price_elem = soup.find("h3")
+        price = price_elem.get_text().strip() if price_elem else "N/A"
+
+        # Extract rating
+        rating_elem = soup.find("span", class_="rating")
+        rating = rating_elem.get_text().strip() if rating_elem else "N/A"
+
+        # Extract available options (colors, sizes)
+        options = {}
+        option_sections = soup.find_all("div", class_="radio-toolbar")
+        for section in option_sections:
+            option_name = section.find_previous("h4")
+            if option_name:
+                option_type = option_name.get_text().strip().rstrip(":")
+                option_values = [label.get_text().strip() for label in section.find_all("label")]
+                if option_values:
+                    options[option_type] = option_values
+
+        # Enhance observation with structured product details
+        enhanced_ob = ob + "\n\n=== PRODUCT DETAILS ===\n"
+        if asin:
+            enhanced_ob += f"🔖 Product ID (ASIN): {asin}\n"
+        enhanced_ob += f"📦 Title: {title}\n"
+        enhanced_ob += f"💰 Price: {price}\n"
+        enhanced_ob += f"⭐ Rating: {rating}\n"
+        if image_url:
+            enhanced_ob += f"🖼️ Image URL: {image_url}\n"
+
+        if options:
+            enhanced_ob += "\n📋 Available Options:\n"
+            for option_type, values in options.items():
+                enhanced_ob += f"   {option_type}: {', '.join(values)}\n"
+
+        ob = enhanced_ob
 
     print("#" * 50)
     print("Click result:")

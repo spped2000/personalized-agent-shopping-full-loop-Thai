@@ -17,11 +17,15 @@ import os
 import google.auth
 
 # Only set up Google Cloud credentials if using Vertex AI
-use_vertexai = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "True").upper() in ["TRUE", "1"]
+use_vertexai = os.environ.get("GOOGLE_GENAI_USE_VERTEXAI", "False").upper() in ["TRUE", "1"]
 if use_vertexai:
-    _, project_id = google.auth.default()
-    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
-    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
+    try:
+        _, project_id = google.auth.default()
+        os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+        os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
+    except Exception:
+        # If auth fails, assume using API key instead
+        os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "False")
 else:
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "False")
 

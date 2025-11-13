@@ -26,8 +26,10 @@ async def search(keywords: str, tool_context: ToolContext) -> str:
       tool_context(ToolContext): The function context.
 
     Returns:
-      str: The search result displayed in a webpage.
+      str: The search result displayed in a webpage with product details including images and ASINs.
     """
+    from bs4 import BeautifulSoup
+
     webshop_env = get_webshop_env()
     status = {"reward": None, "done": False}
     action_string = f"search[{keywords}]"
@@ -39,6 +41,49 @@ async def search(keywords: str, tool_context: ToolContext) -> str:
     index = ob.find("Back to Search")
     if index >= 0:
         ob = ob[index:]
+
+    # Extract product details from HTML
+    html = webshop_env.state["html"]
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Extract product information
+    products_info = []
+    product_links = soup.find_all(class_="product-link")
+
+    for link in product_links:
+        asin = link.get_text().strip()
+        # Find the parent container to get associated product details
+        product_container = link.find_parent("div", class_="item")
+        if product_container:
+            # Extract image
+            img_tag = product_container.find("img")
+            image_url = img_tag.get("src") if img_tag else None
+
+            # Extract title
+            title_tag = product_container.find("h4")
+            title = title_tag.get_text().strip() if title_tag else "N/A"
+
+            # Extract price
+            price_tag = product_container.find("p")
+            price = price_tag.get_text().strip() if price_tag else "N/A"
+
+            products_info.append({
+                "asin": asin,
+                "title": title,
+                "price": price,
+                "image": image_url
+            })
+
+    # Enhance observation with product details
+    if products_info:
+        enhanced_ob = ob + "\n\n=== PRODUCT DETAILS ===\n"
+        for i, product in enumerate(products_info, 1):
+            enhanced_ob += f"\n{i}. Product ID (ASIN): {product['asin']}\n"
+            enhanced_ob += f"   Title: {product['title']}\n"
+            enhanced_ob += f"   Price: {product['price']}\n"
+            if product['image']:
+                enhanced_ob += f"   Image URL: {product['image']}\n"
+        ob = enhanced_ob
 
     print("#" * 50)
     print("Search result:")
